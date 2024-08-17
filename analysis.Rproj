@@ -1,13 +1,288 @@
-Version: 1.0
+#１．master fileの欠損地の数え方（113個）
+sum(is.na(master_file))
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+#２．問題背景を知る上で役に立つ記述統計量を作成しなさい。
+#参考サイト：https://ebreha.com/descriptive/#toc6
+library(MASS)
+summary(master_file)
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+library(psych)
+describe(master_file)
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+install.packages("pastecs")
+library(pastecs)
+stat.desc(master_file)
+
+install.packages("summarytools")
+library(summarytools)
+descr(stats = c("mean", "sd", "n.valid"), transpose = TRUE, headings = FALSE)
+
+
+
+
+# データフレームのsummaryを出力
+summary(master_file)
+# パッケージのインストール
+#install.packages("psych")
+
+# パッケージの読み込み
+library(psych)
+
+# データフレームの詳細な記述統計量を取得
+describe(master_file)
+# パッケージのインストール
+#install.packages("knitr")
+
+# パッケージの読み込み
+library(knitr)
+
+variable_names <- colnames(master_file)
+
+# データフレームの各列の平均と標準偏差を計算
+means <- sapply(master_file, mean, na.rm = TRUE)
+sds <- sapply(master_file, sd, na.rm = TRUE)
+
+
+# 平均と標準偏差を結合して「平均 (標準偏差)」の形式にする
+mean_sd <- paste0(round(means, 2), " (", round(sds, 2), ")")
+
+# kable関数を使ってsummaryの結果を表として表示
+summary_table <- data.frame(Variable = variable_names, `Mean (SD)` = mean_sd)
+kable(summary_table, format = "html", caption = "Summary Statistics")
+# パッケージのインストール
+#install.packages("gt")
+
+# パッケージの読み込み
+library(gt)
+
+# gtパッケージを使ったきれいな表の作成
+gt(summary_table) %>%
+  cols_label(
+    Variable = "Variable",
+    `Mean (SD)` = "Mean (SD)"
+  ) %>%
+  tab_header(
+    title = "Descriptive Statistics",
+    subtitle = "Mean and Standard Deviation"
+  )
+
+
+
+
+#################################################################
+#################################################################
+#################################################################
+#再度チャレンジ#このコマンドで、Viewerにはきれいな表が出力される。
+#参考サイト：https://indenkun.hatenablog.com/entry/2021/04/06/213911
+#install.packages("tidyverse", dependencies = TRUE)
+#install.packages("gtsummary", dependencies = TRUE)
+library(tidyverse)
+library(gtsummary)
+
+#以下ではエラーが出てしまって動かなかった
+#理由：add_p()がいらなかった
+#trial1 <- master_file %>% 
+#  select(tosemester_graderate, mgra_4yr, wgra_4yr, m_4yrgrads, w_4yrgrads, cohortsize, m_cohortsize, w_cohortsize) %>% 
+#  tbl_summary(missing = "no") %>%
+#  add_n() %>% 
+#  add_p() %>% 
+#  modify_header(label = "**Variable**") %>% 
+#  bold_labels()
+
+#print(trial1)
+
+trial1 <- master_file %>% 
+  select(tosemester_graderate, mgra_4yr, wgra_4yr, m_4yrgrads, w_4yrgrads, cohortsize, m_cohortsize, w_cohortsize) %>% 
+  tbl_summary(missing = "no") %>%
+  add_n() %>% 
+  modify_header(label = "**Variable**") %>% 
+  bold_labels()
+
+print(trial1)
+
+#install.packages("flextable")
+
+library(flextable)
+trial1 %>% 
+  as_flex_table() %>% 
+  save_as_pptx(path = "output.pptx")
+
+
+#install.packages("flextable", type = "source")
+#word形式
+library(flextable) 
+
+trial1 %>% 
+  as_flex_table() %>% 
+  save_as_docx(path = "output.docx")
+
+
+#再チャレンジ
+# 必要なパッケージの読み込み
+library(tidyverse)
+library(gtsummary)
+library(flextable)
+library(officer)
+#install.packages("clipr")
+library(clipr)
+
+
+# データの選択と記述統計表の作成
+trial1 <- master_file %>% 
+  select(tosemester_graderate, mgra_4yr, wgra_4yr, m_4yrgrads, w_4yrgrads, cohortsize, m_cohortsize, w_cohortsize) %>% 
+  tbl_summary(missing = "no") %>%
+  add_n() %>% 
+  modify_header(label = "**Variable**") %>% 
+  bold_labels()
+
+# flextable形式に変換
+flex_table <- trial1 %>% 
+  as_flex_table()
+
+# Word文書に出力する
+doc <- read_docx() %>% 
+  body_add_flextable(value = flex_table) %>% 
+  body_add_par("") # 空の段落を追加して整形
+
+# ファイルとして保存
+print(doc, target = "output.docx")
+
+# 表をデータフレームとして変換
+trial1_df <- as.data.frame(trial1)
+
+# クリップボードにコピー
+write_clip(trial1_df)
+
+#################################################################
+#################################################################
+#################################################################
+#install.packages("tidyverse")
+#install.packages("gtsummary")
+#install.packages("flextable")
+#install.packages("officer")
+
+library(tidyverse)
+library(gtsummary)
+library(flextable)
+library(officer)
+# データフレームから必要な列を選択して記述統計を作成
+trial1 <- master_file %>% 
+  select(tosemester_graderate, mgra_4yr, wgra_4yr, m_4yrgrads, w_4yrgrads, cohortsize, m_cohortsize, w_cohortsize) %>% 
+  tbl_summary(missing = "no") %>%
+  add_n() %>% 
+  modify_header(label = "**Variable**") %>% 
+  bold_labels()
+# flextable形式に変換
+flex_table <- trial1 %>% 
+  as_flex_table()
+
+# 表に縦線と横線を追加してフォーマットを整える
+flex_table <- flex_table %>%
+  theme_box() %>%  # 縦線と横線のテーマを適用
+  bold(part = "header") %>%  # ヘッダーを太字に
+  set_table_properties(width = 0.5, layout = "autofit")  # 表の幅を自動調整
+
+# 表をクリップボードにコピー
+flextable::qflextable_to_rtf(flex_table) %>%  write_clip()
+
+# 表を確認したい場合は、下記コードを使用
+print(flex_table)
+
+#################################################################
+#################################################################
+#################################################################
+# 必要なパッケージの読み込み
+library(tidyverse)
+library(gtsummary)
+library(flextable)
+library(officer)
+
+# データフレームから必要な列を選択して記述統計を作成
+trial1 <- master_file %>% 
+  select(tosemester_graderate, mgra_4yr, wgra_4yr, m_4yrgrads, w_4yrgrads, cohortsize, m_cohortsize, w_cohortsize) %>% 
+  tbl_summary(missing = "no") %>%
+  add_n() %>% 
+  modify_header(label = "**Variable**") %>% 
+  bold_labels()
+
+# flextable形式に変換して表を整形
+flex_table <- trial1 %>% 
+  as_flex_table() %>%
+  theme_box() %>%  # 縦線と横線のテーマ適用
+  bold(part = "header") %>%  # ヘッダーを太字に
+  set_table_properties(width = 0.5, layout = "autofit")  # 表の幅を自動調整
+
+# Word文書を作成して表を挿入
+doc <- read_docx() %>%
+  body_add_flextable(flex_table) %>%
+  body_add_par("")  # 空の段落を追加して整形
+
+# Wordファイルとして保存
+print(doc, target = "output.docx")
+
+#################################################################
+#################################################################
+#################################################################
+#３．４年卒業率の平均推移を計算し、図で示しなさい。
+#参考サイト：https://rdatascience.com/rstudy/graph/linechart/2689/
+#参考サイト：https://rcatalogue.com/plot/basic-plot/line-chart/
+#参考サイト：https://bioinfo-dojo.net/2016/11/24/various_axis_r/
+master_file <- master_file %>% arrange(year)
+
+average_data <- master_file %>%
+  group_by(year) %>%
+  summarise(mean_semester = mean(tosemester_graderate))
+print(average_data)
+
+x <- average_data$year
+y <- average_data$mean_semester
+
+plot(average_data$year, average_data$mean_semester, 
+     main="４年卒業率の平均推移",  # タイトル
+     xlab="年",  # X軸のラベル
+     ylab="４年卒業率の平均",  # Y軸のラベル
+     #pch=1,  # ポイントのタイプ（pch=1は円）
+     cex=2,
+     lwd=2,
+     col="black",
+     type= "o")
+#yaxt = "n"
+
+
+
+
+# X軸のメモリを細かくする
+axis(1, at = seq(min(x), max(x), by = 1))
+
+# Y軸のメモリを細かくする
+#axis(2, at = seq(floor(min(y)), ceiling(max(y)), by = 0.1))
+
+# グリッド線を追加（オプション）
+#grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
+
+
+#################################################################
+#################################################################
+#################################################################
+#semester導入率を計算し、図で示しなさい。
+#セメスターが導入されたかどうか、0から1に切り替わるポイントがいくつあるかを確認する必要がある。
+#１．そのポイントの数え方のプログラムを作成する必要がある。
+#２．新しいデータフレームを作成して、導入率を作成し、先ほどと同様にプロットする
+
+# 各IDごとに切り替わりを計算する
+result <- master_file %>%
+  group_by(id) %>%
+  summarise(
+    num_switch_0_to_1 = sum(diff(switchpoint) == 1),
+    num_no_switch = ifelse(all(switchpoint == 0 | switchpoint == 1), 1, 0)
+  )
+
+# 切り替わったポイントの合計
+total_switch_0_to_1 <- sum(result$num_switch_0_to_1)
+
+# 切り替わっていないポイントの合計
+total_no_switch <- sum(result$num_no_switch)
+
+# 結果を表示
+cat("0から1に切り替わったポイントの数:", total_switch_0_to_1, "\n")
+cat("切り替わっていないポイントの数:", total_no_switch, "\n")
